@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "objects": {
+    "app:recert": {
+      "guid": "c2fcb864bd41445ef4e2f03fe47a4eed",
+      "canonical": "recert",
+      "canonical_source": "code"
+    },
+    "dbo:employees": {
+      "guid": "e05980ecaa4124cc47542f9a6082973d"
+    },
+    "dbo:entitlements": {
+      "guid": "386af250bba7f2c511acbb3c92a9075c"
+    },
+    "dbo:recert_policies": {
+      "guid": "ad75fb686b5fb1e0e7a8f63df27b07c5"
+    },
+    "dbo:recert_reviews": {
+      "guid": "2fdab546b11aaaf87dd21c7eb85c70ad"
+    },
+    "dbo:review_signoffs": {
+      "guid": "40bcbb12a3b5d4d2d21bef7f6beaa88e"
+    },
+    "dbo:users": {
+      "guid": "157d4a98d979cf04b9ccdb98dfc15229"
+    },
+    "function:run_recertification_scan": {
+      "guid": "fea43665926e0a7ba0a136f2a72c10a3"
+    },
+    "query:recert|GET|audit": {
+      "guid": "07159c6da704068f5c1dba18d63a8b91"
+    },
+    "query:recert|GET|me": {
+      "guid": "94ca4b4833d5ce7afe4905a289245aae"
+    },
+    "query:recert|GET|reviews": {
+      "guid": "ac619e661190f7b64c98b73f449718d4"
+    },
+    "query:recert|GET|reviews/{review_id}": {
+      "guid": "9138de3914f34d039a5ccd3e7bf48565"
+    },
+    "query:recert|POST|auth/login": {
+      "guid": "fbff24ca99da5df7fa4a19705f95219c"
+    },
+    "query:recert|POST|reviews/{review_id}/revoke": {
+      "guid": "caab95e3194145c14f048fbb5b280460"
+    },
+    "query:recert|POST|reviews/{review_id}/signoff": {
+      "guid": "eaff22369532139d8affaacdcdd84330"
+    },
+    "query:recert|POST|runs/execute": {
+      "guid": "43d305d62ae6ef2a55d8eb7c8f79a469"
+    },
+    "query:recert|POST|seed": {
+      "guid": "da96ab2c82caf591ccf05b09d754791d"
+    },
+    "task:recert_daily_scan": {
+      "guid": "f9886d4ab58bda0ba4b213fb963ca5c5"
+    }
+  }
+}

@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Access Recertification Scheduler, a governed Xano backend</title>
+    <meta
+      name="description"
+      content="A governed Xano backend for periodic access recertification: a scheduled scan flags entitlements past their risk based review interval, opens role guarded reviews, and writes every decision to an append only audit trail."
+    />
+    <style>
+      :root {
+        --bg: #0a0b0d;
+        --panel: #141619;
+        --panel-2: #191c21;
+        --border: #262a31;
+        --text: #e8eaef;
+        --muted: #9aa1ad;
+        --primary: #6d7cff;
+        --primary-ink: #ffffff;
+        --crit: #f0616d;
+        --high: #f6a24a;
+        --med: #ecc94b;
+        --low: #4ade80;
+        --radius: 12px;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: radial-gradient(1200px 600px at 50% -10%, #171a2e 0%, var(--bg) 60%);
+        color: var(--text);
+        font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: inherit; }
+      .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+      header.site {
+        display: flex; align-items: center; gap: 10px;
+        padding: 20px; max-width: 980px; margin: 0 auto;
+      }
+      .mark {
+        width: 30px; height: 30px; border-radius: 8px;
+        background: linear-gradient(135deg, var(--primary), #9a7cff);
+        display: grid; place-items: center; color: #fff; font-weight: 700;
+      }
+      .brand { font-weight: 650; letter-spacing: -0.01em; }
+      .hero { text-align: center; padding: 44px 0 8px; }
+      .badges { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+      .pill {
+        font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 999px;
+        border: 1px solid var(--border); background: var(--panel); color: var(--muted);
+      }
+      h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.08; letter-spacing: -0.03em; margin: 0 0 14px; }
+      .lede { color: var(--muted); font-size: 18px; max-width: 720px; margin: 0 auto 18px; }
+      .meta { color: var(--muted); font-size: 14px; margin-bottom: 22px; }
+      .meta b { color: var(--text); font-weight: 650; }
+      .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+      .btn {
+        display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+        font-weight: 600; font-size: 15px; padding: 11px 20px; border-radius: 10px;
+        border: 1px solid transparent; transition: transform .05s ease, background .15s ease, border-color .15s ease;
+      }
+      .btn:active { transform: translateY(1px); }
+      .btn.primary { background: var(--primary); color: var(--primary-ink); }
+      .btn.primary:hover { background: #7d8bff; }
+      .btn.ghost { background: transparent; border-color: var(--border); color: var(--text); }
+      .btn.ghost:hover { border-color: #3a3f49; background: var(--panel); }
+      .shot {
+        margin: 34px auto 8px; border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+        box-shadow: 0 24px 60px -30px rgba(0,0,0,.8); background: var(--panel);
+      }
+      .shot img { display: block; width: 100%; height: auto; }
+      section { padding: 34px 0; }
+      h2 { font-size: 22px; letter-spacing: -0.02em; margin: 0 0 16px; }
+      .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+      .card {
+        background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+        padding: 16px 18px;
+      }
+      .card h3 { margin: 0 0 6px; font-size: 15px; }
+      .card p { margin: 0; color: var(--muted); font-size: 14px; }
+      table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--panel);
+        border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+      th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+      th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+      tr:last-child td { border-bottom: none; }
+      code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+      td .verb { color: var(--primary); font-weight: 600; }
+      .use { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 22px; }
+      pre {
+        background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px;
+        padding: 14px 16px; overflow-x: auto; font-size: 13.5px; color: #d7dbe3; margin: 0 0 12px;
+      }
+      .tiers { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+      .tier { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; border: 1px solid; }
+      .tier.crit { color: var(--crit); border-color: color-mix(in srgb, var(--crit) 40%, transparent); }
+      .tier.high { color: var(--high); border-color: color-mix(in srgb, var(--high) 40%, transparent); }
+      .tier.med  { color: var(--med);  border-color: color-mix(in srgb, var(--med) 40%, transparent); }
+      .tier.low  { color: var(--low);  border-color: color-mix(in srgb, var(--low) 40%, transparent); }
+      .note { color: var(--muted); font-size: 13.5px; border-left: 3px solid var(--border); padding-left: 14px; }
+      footer { color: var(--muted); font-size: 13px; text-align: center; padding: 30px 0 50px; border-top: 1px solid var(--border); margin-top: 20px; }
+    </style>
+  </head>
+  <body>
+    <header class="site">
+      <div class="mark">A</div>
+      <div class="brand">Access Recertification Scheduler</div>
+    </header>
+
+    <main class="wrap">
+      <div class="hero">
+        <div class="badges">
+          <span class="pill">Play 2 · Backend Modernization</span>
+          <span class="pill">Financial services · banking compliance</span>
+          <span class="pill">XanoTS</span>
+        </div>
+        <h1>Recertify access on a schedule,<br />with every decision logged.</h1>
+        <p class="lede">
+          A governed Xano backend for periodic access recertification. A scheduled scan flags entitlements
+          past their risk based review interval, opens role guarded review items, and writes every sign off
+          and revocation to an audit trail a regulator can read.
+        </p>
+        <p class="meta"><b>6</b> tables · <b>9</b> endpoints · <b>1</b> shared function · <b>1</b> scheduled task</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="https://github.com/xano-scratch/access-recertification-scheduler">View on GitHub</a>
+          <a class="btn ghost" href="#use">Use this template</a>
+        </div>
+      </div>
+
+      <div class="shot">
+        <img src="screenshot.png" alt="The review queue showing flagged entitlements with the rule that fired for each, beside one review's governed context and its sign off and revoke actions." />
+      </div>
+
+      <section>
+        <h2>What it demonstrates</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>Risk tiered policy</h3>
+            <p>One policy row per tier sets the review interval. The scan reads the table, so cadence is data, not code.</p>
+            <div class="tiers">
+              <span class="tier crit">critical 30d</span>
+              <span class="tier high">high 90d</span>
+              <span class="tier med">medium 180d</span>
+              <span class="tier low">low 365d</span>
+            </div>
+          </div>
+          <div class="card">
+            <h3>A real review workflow</h3>
+            <p>An overdue grant opens a review that a reviewer signs off (stamping it recertified) or revokes. An actioned review cannot be actioned again.</p>
+          </div>
+          <div class="card">
+            <h3>API layer RBAC</h3>
+            <p>A native auth table plus per endpoint role preconditions. A viewer cannot act, a non admin cannot run the scan. Access is enforced at the API layer, not with row level rules.</p>
+          </div>
+          <div class="card">
+            <h3>Scheduled and idempotent</h3>
+            <p>A daily task and a run now endpoint call the same scan function, so both enforce identical policy. Running it twice never opens duplicate reviews.</p>
+          </div>
+          <div class="card">
+            <h3>Append only audit</h3>
+            <p>Every decision writes one immutable row: who acted, what changed, and when. The read only viewer role can audit but not act.</p>
+          </div>
+          <div class="card">
+            <h3>One typed contract</h3>
+            <p>The React frontend derives every request path and type from the backend query defs. Change a def and the client follows at compile time.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>API surface</h2>
+        <table>
+          <thead>
+            <tr><th>Method</th><th>Path</th><th>Enforces</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="verb">POST</span></td><td class="mono">recert/seed</td><td>Open. Resets the demo dataset.</td></tr>
+            <tr><td><span class="verb">POST</span></td><td class="mono">recert/auth/login</td><td>Valid credentials only, mints a token.</td></tr>
+            <tr><td><span class="verb">GET</span></td><td class="mono">recert/me</td><td>The authenticated user and role.</td></tr>
+            <tr><td><span class="verb">POST</span></td><td class="mono">recert/runs/execute</td><td>Compliance admin only. Runs the scan now.</td></tr>
+            <tr><td><span class="verb">GET</span></td><td class="mono">recert/reviews</td><td>Reviewer or above. Lists reviews by status.</td></tr>
+            <tr><td><span class="verb">GET</span></td><td class="mono">recert/reviews/{id}</td><td>Reviewer or above. One review in full context.</td></tr>
+            <tr><td><span class="verb">POST</span></td><td class="mono">recert/reviews/{id}/signoff</td><td>Reviewer or above. Recertify, once per review.</td></tr>
+            <tr><td><span class="verb">POST</span></td><td class="mono">recert/reviews/{id}/revoke</td><td>Reviewer or above. Revoke access, once per review.</td></tr>
+            <tr><td><span class="verb">GET</span></td><td class="mono">recert/audit</td><td>Viewer or above. The append only decision log.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Four screens</h2>
+        <div class="grid">
+          <div class="card"><h3>Sign in</h3><p>Pick a seeded user to see the role gated UI. One click loads the demo data on a fresh deploy.</p></div>
+          <div class="card"><h3>Review queue</h3><p>Flagged entitlements with the rule that fired, the risk tier, and the due date. Admins run the scan here.</p></div>
+          <div class="card"><h3>Review detail</h3><p>The full governed context for one item, with sign off and revoke actions gated to reviewers.</p></div>
+          <div class="card"><h3>Audit trail</h3><p>Every decision, newest first, with who acted and why. The screen a regulator could read.</p></div>
+        </div>
+      </section>
+
+      <section id="use">
+        <h2>Use this template</h2>
+        <div class="use">
+          <p style="margin-top:0; color: var(--muted);">
+            Clone the repo and stand up your own live copy on Xano. Paste this to a coding agent, or run the
+            commands yourself.
+          </p>
+          <pre><code>Clone https://github.com/xano-scratch/access-recertification-scheduler
+and deploy it to my Xano instance:
+  npm install
+  npx xanots login
+  npm run xano:deploy
+Then open the printed URL, click "Load demo data", and sign in
+as alice@bank.example (password recert-demo).</code></pre>
+          <p class="note">
+            Any hosted demo links are ephemeral and expire within hours. The durable artifact is this repo:
+            run <code>npm run xano:deploy</code> for a fresh live instance and URL whenever you need one.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Built with XanoTS. MIT licensed. An experimental scratch app with seeded sample data, not a production system.
+    </footer>
+  </body>
+</html>
